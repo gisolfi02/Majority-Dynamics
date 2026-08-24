@@ -1,5 +1,10 @@
 from src.graph import load_graph, get_graph_statistics # type: ignore
 from src.diffusion import majority_cascade
+from src.costs import (
+    generate_random_costs,
+    generate_degree_costs,
+    seed_set_cost,
+)
 
 
 DATASET_PATH = "data/facebook_combined.txt"
@@ -49,6 +54,47 @@ def main():
     print(f"Nodi finali attivati: {len(active)}")
     print(f"Round della cascade: {rounds}")
     print(f"Percentuale influenzata: {influence_percentage:.2f}%")
+
+    # Generazione delle due funzioni di costo
+    random_costs = generate_random_costs(graph)
+
+    degree_costs = generate_degree_costs(graph)
+
+    print("\n=== COST FUNCTIONS ===")
+
+    print("\nPrimi 10 nodi:")
+
+    for node in list(graph.nodes)[:10]:
+        print(
+            f"Nodo {node:4d} | "
+            f"grado = {graph.degree[node]:3d} | "
+            f"random cost = {random_costs[node]:2d} | "
+            f"degree cost = {degree_costs[node]:3d}"
+        )
+
+    print("\nCosto totale della rete:")
+
+    print(
+        f"Random costs: "
+        f"{sum(random_costs.values())}"
+    )
+
+    print(
+        f"Degree costs: "
+        f"{sum(degree_costs.values())}"
+    )
+
+    print("\nCosto del seed set temporaneo:")
+
+    print(
+        f"Random: "
+        f"{seed_set_cost(TEST_SEEDS, random_costs)}"
+    )
+
+    print(
+        f"Degree: "
+        f"{seed_set_cost(TEST_SEEDS, degree_costs)}"
+    )
 
 
 if __name__ == "__main__":
