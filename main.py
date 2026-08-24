@@ -1,17 +1,20 @@
-from src.graph import load_graph, get_graph_statistics
-from src.plots import (
-    plot_degree_histogram,
-    plot_local_clustering_histogram,
-)
+from src.graph import load_graph, get_graph_statistics # type: ignore
+from src.diffusion import majority_cascade
 
 
 DATASET_PATH = "data/facebook_combined.txt"
 
+# Seed set temporaneo usato soltanto per verificare
+# il funzionamento della Majority Cascade.
+TEST_SEEDS = {0, 1, 2}
+
 
 def main():
-    graph = load_graph(DATASET_PATH)
+    # Caricamento del dataset
+    graph = load_graph(DATASET_PATH) # pyright: ignore[reportUnknownVariableType]
 
-    stats = get_graph_statistics(graph)
+    # Statistiche della rete
+    stats = get_graph_statistics(graph) # type: ignore
 
     print("\n=== FACEBOOK SOCIAL NETWORK ===")
     print(f"Nodi: {stats['nodes']}")
@@ -21,20 +24,31 @@ def main():
     print(f"Grado massimo: {stats['max_degree']}")
     print(f"Densità: {stats['density']:.6f}")
     print(f"Componenti connesse: {stats['connected_components']}")
-    print(f"Dimensione componente principale: {stats['largest_component_size']}")
-    print(f"Clustering medio: {stats['average_clustering']:.4f}")
-
-    plot_degree_histogram(
-        graph,
-        "results/figures/degree_histogram.png"
+    print(
+        f"Dimensione componente principale: "
+        f"{stats['largest_component_size']}"
+    )
+    print(
+        f"Clustering medio: "
+        f"{stats['average_clustering']:.4f}"
     )
 
-    plot_local_clustering_histogram(
+    # Majority Cascade
+    active, rounds = majority_cascade(
         graph,
-        "results/figures/local_clustering_histogram.png"
+        TEST_SEEDS
     )
 
-    print("\nGrafici salvati in results/figures/")
+    influence_percentage = (
+        len(active) / graph.number_of_nodes()
+    ) * 100
+
+    print("\n=== MAJORITY CASCADE ===")
+    print(f"Seed set iniziale: {TEST_SEEDS}")
+    print(f"Numero di seed: {len(TEST_SEEDS)}")
+    print(f"Nodi finali attivati: {len(active)}")
+    print(f"Round della cascade: {rounds}")
+    print(f"Percentuale influenzata: {influence_percentage:.2f}%")
 
 
 if __name__ == "__main__":
