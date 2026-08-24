@@ -37,3 +37,33 @@ def load_graph(file_path: str) -> nx.Graph:
     )
 
     return graph
+
+def get_graph_statistics(graph: nx.Graph) -> dict:
+    """
+    Calcola alcune statistiche descrittive della rete.
+    """
+
+    num_nodes = graph.number_of_nodes()
+    num_edges = graph.number_of_edges()
+
+    degrees = [degree for _, degree in graph.degree()]
+
+    connected_components = list(nx.connected_components(graph))
+    largest_component_size = max(
+        len(component)
+        for component in connected_components
+    )
+
+    statistics = {
+        "nodes": num_nodes,
+        "edges": num_edges,
+        "average_degree": sum(degrees) / num_nodes,
+        "min_degree": min(degrees),
+        "max_degree": max(degrees),
+        "density": nx.density(graph),
+        "connected_components": len(connected_components),
+        "largest_component_size": largest_component_size,
+        "average_clustering": nx.average_clustering(graph),
+    }
+
+    return statistics
