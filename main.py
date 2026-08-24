@@ -1,11 +1,11 @@
-from src.graph import load_graph, get_graph_statistics # type: ignore
+from src.graph import load_graph, get_graph_statistics
 from src.diffusion import majority_cascade
 from src.costs import (
     generate_random_costs,
     generate_degree_costs,
     seed_set_cost,
 )
-
+from src.algorithms import cost_seeds_greedy_f1
 
 DATASET_PATH = "data/facebook_combined.txt"
 
@@ -13,13 +13,17 @@ DATASET_PATH = "data/facebook_combined.txt"
 # il funzionamento della Majority Cascade.
 TEST_SEEDS = {0, 1, 2}
 
+# Budget temporaneo usato soltanto per verificare
+# il funzionamento dell'algoritmo Cost-Seeds-Greedy.
+TEST_BUDGET = 300
 
 def main():
     # Caricamento del dataset
-    graph = load_graph(DATASET_PATH) # pyright: ignore[reportUnknownVariableType]
+    graph = load_graph(DATASET_PATH)
 
+    ''' 
     # Statistiche della rete
-    stats = get_graph_statistics(graph) # type: ignore
+    stats = get_graph_statistics(graph)
 
     print("\n=== FACEBOOK SOCIAL NETWORK ===")
     print(f"Nodi: {stats['nodes']}")
@@ -38,62 +42,39 @@ def main():
         f"{stats['average_clustering']:.4f}"
     )
 
-    # Majority Cascade
+    '''
+    print("\n=== COST-SEEDS-GREEDY + f1 ===")
+
+    random_costs = generate_random_costs(graph)
+
+    f1_seeds = cost_seeds_greedy_f1(
+        graph,
+        TEST_BUDGET,
+        random_costs
+    )
+
+    f1_cost = seed_set_cost(
+        f1_seeds,
+        random_costs
+    )
+
     active, rounds = majority_cascade(
         graph,
-        TEST_SEEDS
+        f1_seeds
     )
 
     influence_percentage = (
         len(active) / graph.number_of_nodes()
     ) * 100
 
-    print("\n=== MAJORITY CASCADE ===")
-    print(f"Seed set iniziale: {TEST_SEEDS}")
-    print(f"Numero di seed: {len(TEST_SEEDS)}")
+    print(f"Budget: {TEST_BUDGET}")
+    print(f"Numero di seed selezionati: {len(f1_seeds)}")
+    print(f"Costo del seed set: {f1_cost}")
     print(f"Nodi finali attivati: {len(active)}")
     print(f"Round della cascade: {rounds}")
-    print(f"Percentuale influenzata: {influence_percentage:.2f}%")
-
-    # Generazione delle due funzioni di costo
-    random_costs = generate_random_costs(graph)
-
-    degree_costs = generate_degree_costs(graph)
-
-    print("\n=== COST FUNCTIONS ===")
-
-    print("\nPrimi 10 nodi:")
-
-    for node in list(graph.nodes)[:10]:
-        print(
-            f"Nodo {node:4d} | "
-            f"grado = {graph.degree[node]:3d} | "
-            f"random cost = {random_costs[node]:2d} | "
-            f"degree cost = {degree_costs[node]:3d}"
-        )
-
-    print("\nCosto totale della rete:")
-
     print(
-        f"Random costs: "
-        f"{sum(random_costs.values())}"
-    )
-
-    print(
-        f"Degree costs: "
-        f"{sum(degree_costs.values())}"
-    )
-
-    print("\nCosto del seed set temporaneo:")
-
-    print(
-        f"Random: "
-        f"{seed_set_cost(TEST_SEEDS, random_costs)}"
-    )
-
-    print(
-        f"Degree: "
-        f"{seed_set_cost(TEST_SEEDS, degree_costs)}"
+        f"Percentuale influenzata: "
+        f"{influence_percentage:.2f}%"
     )
 
 
