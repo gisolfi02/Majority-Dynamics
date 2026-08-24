@@ -96,3 +96,86 @@ def cost_seeds_greedy_f1(
             seed_neighbors[neighbor] += 1
 
     return seed_set
+
+
+def cost_seeds_greedy_f2(
+    graph: nx.Graph,
+    budget: int,
+    costs: dict[int, int]
+) -> set[int]:
+    """
+    Implementa Cost-Seeds-Greedy utilizzando la funzione f2.
+
+    A ogni iterazione viene scelto il nodo u che massimizza:
+
+        Delta_u f2(S) / c(u)
+
+    dove:
+
+        Delta_u f2(S) =
+            sum_{v in N(u)}
+            max(t(v) - |N(v) intersect S|, 0)
+
+    con:
+
+        t(v) = ceil(d(v) / 2)
+    """
+
+    seed_set = set()
+
+    # Numero di vicini appartenenti al seed set
+    # per ciascun nodo.
+    seed_neighbors = {
+        node: 0
+        for node in graph.nodes
+    }
+
+    # Soglie majority.
+    thresholds = {
+        node: (graph.degree[node] + 1) // 2
+        for node in graph.nodes
+    }
+
+    current_cost = 0
+
+    while True:
+
+        best_node = None
+        best_ratio = -1.0
+
+        for candidate in graph.nodes:
+
+            if candidate in seed_set:
+                continue
+
+            marginal_gain = 0
+
+            for neighbor in graph.neighbors(candidate):
+
+                remaining = (
+                    thresholds[neighbor]
+                    - seed_neighbors[neighbor]
+                )
+
+                if remaining > 0:
+                    marginal_gain += remaining
+
+            ratio = marginal_gain / costs[candidate]
+
+            if ratio > best_ratio:
+                best_ratio = ratio
+                best_node = candidate
+
+        if best_node is None:
+            break
+
+        if current_cost + costs[best_node] > budget:
+            break
+
+        seed_set.add(best_node)
+        current_cost += costs[best_node]
+
+        for neighbor in graph.neighbors(best_node):
+            seed_neighbors[neighbor] += 1
+
+    return seed_set
