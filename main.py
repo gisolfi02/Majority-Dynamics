@@ -7,7 +7,8 @@ from src.costs import (
 )
 from src.algorithms import (
     cost_seeds_greedy_f1,
-    cost_seeds_greedy_f2
+    cost_seeds_greedy_f2,
+    cascade_gain_greedy
 )
 
 DATASET_PATH = "data/facebook_combined.txt"
@@ -122,6 +123,38 @@ def main():
     print(
         f"Percentuale influenzata: "
         f"{f2_influence_percentage:.2f}%"
+    )
+
+    print("\n=== CASCADE-GAIN GREEDY ===")
+
+    cgg_seeds = cascade_gain_greedy(
+        graph,
+        TEST_BUDGET,
+        random_costs
+    )
+
+    cgg_cost = seed_set_cost(
+        cgg_seeds,
+        random_costs
+    )
+
+    cgg_active, cgg_rounds = majority_cascade(
+        graph,
+        cgg_seeds
+    )
+
+    cgg_influence_percentage = (
+        len(cgg_active) / graph.number_of_nodes()
+    ) * 100
+
+    print(f"Budget: {TEST_BUDGET}")
+    print(f"Numero di seed selezionati: {len(cgg_seeds)}")
+    print(f"Costo del seed set: {cgg_cost}")
+    print(f"Nodi finali attivati: {len(cgg_active)}")
+    print(f"Round della cascade: {cgg_rounds}")
+    print(
+        f"Percentuale influenzata: "
+        f"{cgg_influence_percentage:.2f}%"
     )
 
 
