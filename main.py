@@ -5,7 +5,10 @@ from src.costs import (
     generate_random_costs,
     generate_degree_costs,
 )
-from src.experiments import run_budget_experiments
+from src.experiments import (
+    run_budget_experiments,
+    run_edge_removal_experiments,
+)
 from src.plots import plot_budget_influence
 from src.perturbations import remove_random_edges
 
@@ -19,10 +22,19 @@ BUDGET_PERCENTAGES = [
     0.20,
 ]
 
+EDGE_REMOVAL_PERCENTAGES = [
+    0.01,
+    0.05,
+    0.10,
+    0.20,
+]
+
+EDGE_REMOVAL_REPETITIONS = 20
+
 def main():
 
     graph = load_graph(DATASET_PATH)
-    '''
+
     print("\n=== GENERAZIONE COSTI ===")
 
     random_costs = generate_random_costs(
@@ -45,7 +57,7 @@ def main():
         f"Costo totale - Degree: "
         f"{sum(degree_costs.values())}"
     )
-
+    '''
     print("\n=== ESPERIMENTI RANDOM COST ===")
 
     random_results = run_budget_experiments(
@@ -109,7 +121,6 @@ def main():
         "Grafici salvati in "
         "results/figures/"
     )
-    '''
 
     print("\n=== TEST EDGE REMOVAL ===")
 
@@ -132,6 +143,32 @@ def main():
     print(
         f"Archi rimossi: "
         f"{graph.number_of_edges() - test_graph.number_of_edges()}"
+    ) 
+    '''
+    print("\n=== ESPERIMENTI RIMOZIONE ARCHI ===")
+
+    cost_functions = {
+        "Random": random_costs,
+        "Degree": degree_costs,
+    }
+
+    edge_results = run_edge_removal_experiments(
+        graph=graph,
+        cost_functions=cost_functions,
+        budget_percentages=BUDGET_PERCENTAGES,
+        removal_percentages=EDGE_REMOVAL_PERCENTAGES,
+        repetitions=EDGE_REMOVAL_REPETITIONS,
+        perturbation_seed=0,
+    )
+
+    edge_results.to_csv(
+        "results/csv/edge_removal_experiments.csv",
+        index=False
+    )
+
+    print(
+        "\nRisultati salvati in "
+        "results/csv/edge_removal_experiments.csv"
     )
 
 

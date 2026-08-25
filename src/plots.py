@@ -128,3 +128,144 @@ def plot_budget_influence(
     )
 
     plt.close()
+
+def aggregate_edge_removal_results(
+    results: pd.DataFrame
+) -> pd.DataFrame:
+    """
+    Aggrega i risultati della rimozione archi
+    calcolando media e deviazione standard
+    delle repliche.
+    """
+
+    aggregated = (
+        results
+        .groupby(
+            [
+                "cost_function",
+                "budget_percentage",
+                "algorithm",
+                "edge_removal_percentage",
+            ],
+            as_index=False
+        )
+        .agg(
+            mean_influenced_nodes=(
+                "perturbed_influenced_nodes",
+                "mean"
+            ),
+            std_influenced_nodes=(
+                "perturbed_influenced_nodes",
+                "std"
+            ),
+            baseline_influenced_nodes=(
+                "baseline_influenced_nodes",
+                "first"
+            ),
+        )
+    )
+
+    return aggregated
+
+
+def plot_edge_removal_composite(
+    aggregated_results: pd.DataFrame,
+    cost_function: str,
+    output_path: str,
+    total_nodes: int
+) -> None:
+    """
+    Genera una figura composita con 3 pannelli:
+    uno per algoritmo. In ogni pannello ci sono
+    5 curve, una per budget.
+
+    X = percentuale di archi rimossi (incluso 0%)
+    Y = |Inf[G', S]|
+    """
+
+    subset = aggregated_results[
+        aggregated_results["cost_function"] == cost_function
+    ].copy()
+
+    algorithms = ["CSG-f1", "CSG-f2", "CGG"]
+    budgets = [1, 2, 5, 10, 20]
+
+    fig, axes = plt.subplots(
+        1, 3, figsize=(18, 5), sharey=True
+    )
+
+    for ax, algorithm in zip(axes, algorithms):
+
+        algorithm_subset = subset[
+            subset["algorithm"] == algorithm
+        ]
+
+        for budget in budgets:
+
+            budget_subset = algorithm_subset[
+                algorithm_subset["budget_percentage"] == budget
+            ].sort_values("edge_removal_percentage")
+
+            if budget_subset.empty:
+                continue
+
+            baseline = budget_subset[
+                "baseline_influenced_nodes"
+            ].iloc[0]
+
+            x_values = [0] + budget_subset[
+                "edge_removal_percentage"
+            ].tolist()
+
+            y_values = [baseline] + budget_subset[
+                "mean_influenced_nodes"
+            ].tolist()
+
+            y_errors = [0] + budget_subset[
+                "std_influenced_nodes"
+            ].fillna(0).tolist()
+
+            ax.errorbar(
+                x_values,
+                y_values,
+                yerr=y_errors,
+                marker="o",
+                linewidth=2,
+                capsize=4,
+                label=f"Budget {budget}%"
+            )
+
+        ax.set_title(algorithm)
+        ax.set_xlabel("Removed Edges (%)")
+        ax.set_xticks([0, 1, 5, 10, 20])
+        ax.grid(True, linestyle="--", alpha=0.5)
+
+    axes[0].set_ylabel("Influenced Nodes |Inf[G',S]|")
+    axes[0].set_ylim(0, total_nodes * 1.05)
+
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=5,
+        bbox_to_anchor=(0.5, 1.05)
+    )
+
+    fig.suptitle(
+        f"Edge Removal Robustness - {cost_function} Costs",
+        fontsize=14
+    )
+
+    fig.tight_layout()
+
+    output = Path(output_path)
+    output.parent.mkdir(parents=True, exist_ok=True)
+
+    plt.savefig(
+        output,
+        dpi=300,
+        bbox_inches="tight"
+    )
+
+    plt.close()
