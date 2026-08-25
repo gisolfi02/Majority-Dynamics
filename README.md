@@ -377,7 +377,7 @@ In termini intuitivi, l'algoritmo cerca il nodo che fornisce il maggiore benefic
 La prima funzione obiettivo è:
 
 $$
-f_1(S)=\sum_{v\in V}\min\left\{|N(v)\cap S|,\left\lceil\frac{d(v)}2\right\rceil\right\}.
+f_1(S)=\sum_{v\in V}\min\{|N(v)\cap S|,\left\lceil\frac{d(v)}2\right\rceil\}.
 $$
 
 Per ogni nodo $v$, $f_1$ misura quanti suoi vicini appartengono al seed set, limitando però il contributo alla soglia majority.
@@ -398,14 +398,7 @@ Quando viene valutato un candidato $u$, soltanto i suoi vicini possono modificar
 Il guadagno può quindi essere calcolato come:
 
 $$
-\Delta_u f_1(S)
-=
-\left|
-\left\{
-v\in N(u):
-|N(v)\cap S|<t(v)
-\right\}
-\right|.
+\Delta_u f_1(S)=\left|\left\{v\in N(u):|N(v)\cap S|<t(v)\right\}\right|.
 $$
 
 Il candidato viene valutato attraverso:
@@ -422,14 +415,7 @@ $$
 La seconda funzione è:
 
 $$
-f_2(S)=
-\sum_{v\in V}
-\sum_{i=1}^{|N(v)\cap S|}
-\max
-\left\{
-\left\lceil\frac{d(v)}2\right\rceil-i+1,
-0
-\right\}.
+f_2(S)=\sum_{v\in V}\sum_{i=1}^{|N(v)\cap S|}\max\left\{\left\lceil\frac{d(v)}2\right\rceil-i+1,0\right\}.
 $$
 
 Se definiamo:
@@ -448,23 +434,13 @@ $$
 l'aggiunta di un candidato $u$ produce un incremento:
 
 $$
-\boxed{
-\Delta_u f_2(S)
-=
-\sum_{v\in N(u)}
-\max
-\left\{
-t(v)-s(v),
-0
-\right\}
-}
+\boxed{\Delta_u f_2(S)=\sum_{v\in N(u)}\max\left\{t(v)-s(v),0\right\}}
 $$
 
 e lo score utilizzato dal greedy è:
 
 $$
-score_{f_2}(u,S)=
-\frac{\Delta_u f_2(S)}{c(u)}.
+score_{f_2}(u,S)=\frac{\Delta_u f_2(S)}{c(u)}.
 $$
 
 A differenza di $f_1$, il contributo non è sempre unitario.
@@ -494,29 +470,13 @@ $$
 Il guadagno marginale reale è:
 
 $$
-\boxed{
-\Delta_u Inf(S)
-=
-|Inf[G,S\cup\{u\}]|
--
-|Inf[G,S]|
-}
+\boxed{\Delta_u Inf(S)=|Inf[G,S\cup\{u\}]|-|Inf[G,S]|}
 $$
 
 e lo score è:
 
 $$
-\boxed{
-score_{CGG}(u,S)
-=
-\frac{
-|Inf[G,S\cup\{u\}]|
--
-|Inf[G,S]|
-}{
-c(u)
-}
-}
+\boxed{score_{CGG}(u,S)=\frac{|Inf[G,S\cup\{u\}]|-|Inf[G,S]|}{c(u)}}
 $$
 
 L'algoritmo seleziona quindi il nodo che produce il maggiore incremento reale della diffusione per unità di costo.
