@@ -363,9 +363,7 @@ $$
 dove:
 
 $$
-\Delta_u f_i(S)
-=
-f_i(S\cup\{u\})-f_i(S)
+\Delta_u f_i(S)=f_i(S\cup\{u\})-f_i(S)
 $$
 
 rappresenta il **guadagno marginale** ottenuto inserendo il nodo $u$ nel seed set corrente.
