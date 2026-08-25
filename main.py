@@ -1,160 +1,83 @@
-from src.graph import load_graph, get_graph_statistics
-from src.diffusion import majority_cascade
+import pandas as pd
+
+from src.graph import load_graph
 from src.costs import (
     generate_random_costs,
     generate_degree_costs,
-    seed_set_cost,
 )
-from src.algorithms import (
-    cost_seeds_greedy_f1,
-    cost_seeds_greedy_f2,
-    cascade_gain_greedy
-)
+from src.experiments import run_budget_experiments
 
 DATASET_PATH = "data/facebook_combined.txt"
 
-# Seed set temporaneo usato soltanto per verificare
-# il funzionamento della Majority Cascade.
-TEST_SEEDS = {0, 1, 2}
-
-# Budget temporaneo usato soltanto per verificare
-# il funzionamento dell'algoritmo Cost-Seeds-Greedy.
-TEST_BUDGET = 100
+BUDGET_PERCENTAGES = [
+    0.01,
+    0.02,
+    0.05,
+    0.10,
+    0.20,
+]
 
 def main():
-    # Caricamento del dataset
+
     graph = load_graph(DATASET_PATH)
 
-    ''' 
-    # Statistiche della rete
-    stats = get_graph_statistics(graph)
+    print("\n=== GENERAZIONE COSTI ===")
 
-    print("\n=== FACEBOOK SOCIAL NETWORK ===")
-    print(f"Nodi: {stats['nodes']}")
-    print(f"Archi: {stats['edges']}")
-    print(f"Grado medio: {stats['average_degree']:.2f}")
-    print(f"Grado minimo: {stats['min_degree']}")
-    print(f"Grado massimo: {stats['max_degree']}")
-    print(f"Densità: {stats['density']:.6f}")
-    print(f"Componenti connesse: {stats['connected_components']}")
-    print(
-        f"Dimensione componente principale: "
-        f"{stats['largest_component_size']}"
-    )
-    print(
-        f"Clustering medio: "
-        f"{stats['average_clustering']:.4f}"
-    )
-
-    ''' 
-
-    random_costs = generate_random_costs(graph)
-
-
-    print("\n=== COST-SEEDS-GREEDY + f1 ===")
-
-
-    f1_seeds = cost_seeds_greedy_f1(
+    random_costs = generate_random_costs(
         graph,
-        TEST_BUDGET,
-        random_costs
+        min_cost=1,
+        max_cost=10,
+        seed=123
     )
 
-    f1_cost = seed_set_cost(
-        f1_seeds,
-        random_costs
+    degree_costs = generate_degree_costs(
+        graph
     )
 
-    active, rounds = majority_cascade(
-        graph,
-        f1_seeds
-    )
-
-    influence_percentage = (
-        len(active) / graph.number_of_nodes()
-    ) * 100
-
-    print(f"Budget: {TEST_BUDGET}")
-    print(f"Numero di seed selezionati: {len(f1_seeds)}")
-    print(f"Costo del seed set: {f1_cost}")
-    print(f"Nodi finali attivati: {len(active)}")
-    print(f"Round della cascade: {rounds}")
     print(
-        f"Percentuale influenzata: "
-        f"{influence_percentage:.2f}%"
+        f"Costo totale - Random: "
+        f"{sum(random_costs.values())}"
     )
 
-    print("\n=== COST-SEEDS-GREEDY + f2 ===")
-
-    f2_seeds = cost_seeds_greedy_f2(
-        graph,
-        TEST_BUDGET,
-        random_costs
-    )
-
-    f2_cost = seed_set_cost(
-        f2_seeds,
-        random_costs
-    )
-
-    f2_active, f2_rounds = majority_cascade(
-        graph,
-        f2_seeds
-    )
-
-    f2_influence_percentage = (
-        len(f2_active) / graph.number_of_nodes()
-    ) * 100
-
-    print(f"Budget: {TEST_BUDGET}")
     print(
-        f"Numero di seed selezionati: "
-        f"{len(f2_seeds)}"
+        f"Costo totale - Degree: "
+        f"{sum(degree_costs.values())}"
     )
-    print(f"Costo del seed set: {f2_cost}")
+
+    print("\n=== ESPERIMENTI RANDOM COST ===")
+
+    random_results = run_budget_experiments(
+        graph=graph,
+        costs=random_costs,
+        cost_name="Random",
+        budget_percentages=BUDGET_PERCENTAGES,
+    )
+
+    print("\n=== ESPERIMENTI DEGREE COST ===")
+
+    degree_results = run_budget_experiments(
+        graph=graph,
+        costs=degree_costs,
+        cost_name="Degree",
+        budget_percentages=BUDGET_PERCENTAGES,
+    )
+
+    results = pd.concat(
+        [
+            random_results,
+            degree_results
+        ],
+        ignore_index=True
+    )
+
+    results.to_csv(
+        "results/csv/budget_experiments.csv",
+        index=False
+    )
+
     print(
-        f"Nodi finali attivati: "
-        f"{len(f2_active)}"
-    )
-    print(
-        f"Round della cascade: "
-        f"{f2_rounds}"
-    )
-    print(
-        f"Percentuale influenzata: "
-        f"{f2_influence_percentage:.2f}%"
-    )
-
-    print("\n=== CASCADE-GAIN GREEDY ===")
-
-    cgg_seeds = cascade_gain_greedy(
-        graph,
-        TEST_BUDGET,
-        random_costs
-    )
-
-    cgg_cost = seed_set_cost(
-        cgg_seeds,
-        random_costs
-    )
-
-    cgg_active, cgg_rounds = majority_cascade(
-        graph,
-        cgg_seeds
-    )
-
-    cgg_influence_percentage = (
-        len(cgg_active) / graph.number_of_nodes()
-    ) * 100
-
-    print(f"Budget: {TEST_BUDGET}")
-    print(f"Numero di seed selezionati: {len(cgg_seeds)}")
-    print(f"Costo del seed set: {cgg_cost}")
-    print(f"Nodi finali attivati: {len(cgg_active)}")
-    print(f"Round della cascade: {cgg_rounds}")
-    print(
-        f"Percentuale influenzata: "
-        f"{cgg_influence_percentage:.2f}%"
+        "\nRisultati salvati in "
+        "results/csv/budget_experiments.csv"
     )
 
 
