@@ -6,6 +6,8 @@ from src.costs import (
     generate_degree_costs,
 )
 from src.experiments import run_budget_experiments
+from src.plots import plot_budget_influence
+from src.perturbations import remove_random_edges
 
 DATASET_PATH = "data/facebook_combined.txt"
 
@@ -20,7 +22,7 @@ BUDGET_PERCENTAGES = [
 def main():
 
     graph = load_graph(DATASET_PATH)
-
+    '''
     print("\n=== GENERAZIONE COSTI ===")
 
     random_costs = generate_random_costs(
@@ -78,6 +80,58 @@ def main():
     print(
         "\nRisultati salvati in "
         "results/csv/budget_experiments.csv"
+    )
+
+
+    print("\n=== GENERAZIONE GRAFICI ===")
+
+    plot_budget_influence(
+        results=results,
+        cost_function="Random",
+        output_path=(
+            "results/figures/"
+            "budget_influence_random.png"
+        ),
+        total_nodes=graph.number_of_nodes()
+    )
+
+    plot_budget_influence(
+        results=results,
+        cost_function="Degree",
+        output_path=(
+            "results/figures/"
+            "budget_influence_degree.png"
+        ),
+        total_nodes=graph.number_of_nodes()
+    )
+
+    print(
+        "Grafici salvati in "
+        "results/figures/"
+    )
+    '''
+
+    print("\n=== TEST EDGE REMOVAL ===")
+
+    test_graph = remove_random_edges(
+        graph,
+        removal_percentage=0.10,
+        seed=0
+    )
+
+    print(
+        f"Archi originali: "
+        f"{graph.number_of_edges()}"
+    )
+
+    print(
+        f"Archi dopo rimozione 10%: "
+        f"{test_graph.number_of_edges()}"
+    )
+
+    print(
+        f"Archi rimossi: "
+        f"{graph.number_of_edges() - test_graph.number_of_edges()}"
     )
 
 
