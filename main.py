@@ -8,6 +8,8 @@ from src.costs import (
 from src.experiments import (
     run_budget_experiments,
     run_edge_removal_experiments,
+    run_node_removal_experiments,
+    compute_seed_configurations
 )
 from src.plots import plot_budget_influence
 from src.perturbations import remove_random_edges
@@ -30,6 +32,15 @@ EDGE_REMOVAL_PERCENTAGES = [
 ]
 
 EDGE_REMOVAL_REPETITIONS = 20
+
+NODE_REMOVAL_PERCENTAGES = [
+    0.01,
+    0.05,
+    0.10,
+    0.20,
+]
+
+NODE_REMOVAL_REPETITIONS = 20
 
 def main():
 
@@ -57,35 +68,26 @@ def main():
         f"Costo totale - Degree: "
         f"{sum(degree_costs.values())}"
     )
+
+    cost_functions = {
+            "Random": random_costs,
+            "Degree": degree_costs,
+        }
+
+    configurations = compute_seed_configurations(
+        graph=graph,
+        cost_functions=cost_functions,
+        budget_percentages=BUDGET_PERCENTAGES,
+    )
     '''
-    print("\n=== ESPERIMENTI RANDOM COST ===")
+    print("\n=== ESPERIMENTI BUDGET ===")
 
-    random_results = run_budget_experiments(
-        graph=graph,
-        costs=random_costs,
-        cost_name="Random",
-        budget_percentages=BUDGET_PERCENTAGES,
+    budget_results = run_budget_experiments(
+    configurations=configurations
     )
 
-    print("\n=== ESPERIMENTI DEGREE COST ===")
-
-    degree_results = run_budget_experiments(
-        graph=graph,
-        costs=degree_costs,
-        cost_name="Degree",
-        budget_percentages=BUDGET_PERCENTAGES,
-    )
-
-    results = pd.concat(
-        [
-            random_results,
-            degree_results
-        ],
-        ignore_index=True
-    )
-
-    results.to_csv(
-        "results/csv/budget_experiments.csv",
+    budget_results.to_csv(
+        "results/budget_experiments.csv",
         index=False
     )
 
@@ -121,41 +123,13 @@ def main():
         "Grafici salvati in "
         "results/figures/"
     )
-
-    print("\n=== TEST EDGE REMOVAL ===")
-
-    test_graph = remove_random_edges(
-        graph,
-        removal_percentage=0.10,
-        seed=0
-    )
-
-    print(
-        f"Archi originali: "
-        f"{graph.number_of_edges()}"
-    )
-
-    print(
-        f"Archi dopo rimozione 10%: "
-        f"{test_graph.number_of_edges()}"
-    )
-
-    print(
-        f"Archi rimossi: "
-        f"{graph.number_of_edges() - test_graph.number_of_edges()}"
-    ) 
     '''
     print("\n=== ESPERIMENTI RIMOZIONE ARCHI ===")
 
-    cost_functions = {
-        "Random": random_costs,
-        "Degree": degree_costs,
-    }
 
     edge_results = run_edge_removal_experiments(
         graph=graph,
-        cost_functions=cost_functions,
-        budget_percentages=BUDGET_PERCENTAGES,
+        configurations=configurations,
         removal_percentages=EDGE_REMOVAL_PERCENTAGES,
         repetitions=EDGE_REMOVAL_REPETITIONS,
         perturbation_seed=0,
@@ -169,6 +143,26 @@ def main():
     print(
         "\nRisultati salvati in "
         "results/csv/edge_removal_experiments.csv"
+    )
+
+    print("\n=== ESPERIMENTI RIMOZIONE NODI ===")
+
+    node_results = run_node_removal_experiments(
+        graph=graph,
+        configurations=configurations,
+        removal_percentages=NODE_REMOVAL_PERCENTAGES,
+        repetitions=NODE_REMOVAL_REPETITIONS,
+        perturbation_seed=0,
+    )
+
+    node_results.to_csv(
+        "results/csv/node_removal_experiments.csv",
+        index=False
+    )
+
+    print(
+        "\nRisultati salvati in "
+        "results/csv/node_removal_experiments.csv"
     )
 
 

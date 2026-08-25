@@ -10,6 +10,10 @@ from src.algorithms import (
 )
 from src.costs import seed_set_cost
 from src.diffusion import majority_cascade
+from src.perturbations import (
+  remove_random_edges,
+  remove_random_nodes
+)
 
 
 ALGORITHMS = {
@@ -20,123 +24,80 @@ ALGORITHMS = {
 
 
 def run_budget_experiments(
-    graph: nx.Graph,
-    costs: dict[int, int],
-    cost_name: str,
-    budget_percentages: list[float],
+    configurations: list[dict]
 ) -> pd.DataFrame:
-    """
-    Esegue i tre algoritmi al variare del budget.
-
-    Il budget viene espresso come percentuale
-    del costo totale della rete.
-    """
 
     results = []
 
-    total_network_cost = sum(costs.values())
+    print("\n=== BUDGET EXPERIMENTS ===")
 
-    for percentage in budget_percentages:
+    for config in configurations:
 
-        budget = int(
-            total_network_cost * percentage
-        )
+        results.append({
+            "cost_function":
+                config["cost_function"],
+
+            "budget_percentage":
+                config["budget_percentage"],
+
+            "budget":
+                config["budget"],
+
+            "algorithm":
+                config["algorithm"],
+
+            "seed_count":
+                config["seed_count"],
+
+            "seed_cost":
+                config["seed_cost"],
+
+            "influenced_nodes":
+                config["baseline_influenced_nodes"],
+
+            "cascade_activated":
+                config["cascade_activated"],
+
+            "influence_percentage":
+                config["baseline_influence_percentage"],
+
+            "rounds":
+                config["baseline_rounds"],
+
+            "execution_time_seconds":
+                config["execution_time_seconds"],
+        })
 
         print(
-            f"\n--- {cost_name} | "
-            f"Budget {percentage * 100:.0f}% "
-            f"(k = {budget}) ---"
+            f"{config['cost_function']:6s} | "
+            f"budget {config['budget_percentage']:5.0f}% | "
+            f"{config['algorithm']:8s} | "
+            f"seed={config['seed_count']:4d} | "
+            f"Inf={config['baseline_influenced_nodes']:4d} | "
+            f"{config['baseline_influence_percentage']:6.2f}%"
         )
-
-        for algorithm_name, algorithm in ALGORITHMS.items():
-
-            start_time = time.perf_counter()
-
-            seeds = algorithm(
-                graph,
-                budget,
-                costs
-            )
-
-            execution_time = (
-                time.perf_counter() - start_time
-            )
-
-            seed_cost = seed_set_cost(
-                seeds,
-                costs
-            )
-
-            active, rounds = majority_cascade(
-                graph,
-                seeds
-            )
-
-            influenced_nodes = len(active)
-
-            influence_percentage = (
-                influenced_nodes
-                / graph.number_of_nodes()
-            ) * 100
-
-            cascade_activated = (
-                influenced_nodes - len(seeds)
-            )
-
-            results.append({
-                "cost_function": cost_name,
-                "budget_percentage":
-                    percentage * 100,
-                "budget": budget,
-                "algorithm": algorithm_name,
-                "seed_count": len(seeds),
-                "seed_cost": seed_cost,
-                "influenced_nodes":
-                    influenced_nodes,
-                "cascade_activated":
-                    cascade_activated,
-                "influence_percentage":
-                    influence_percentage,
-                "rounds": rounds,
-                "execution_time_seconds":
-                    execution_time,
-            })
-
-            print(
-                f"{algorithm_name:8s} | "
-                f"seed={len(seeds):4d} | "
-                f"c(S)={seed_cost:6d} | "
-                f"Inf={influenced_nodes:4d} | "
-                f"{influence_percentage:6.2f}% | "
-                f"time={execution_time:.2f}s"
-            )
 
     return pd.DataFrame(results)
 
-def run_edge_removal_experiments(
+
+def compute_seed_configurations(
     graph: nx.Graph,
     cost_functions: dict[str, dict[int, int]],
     budget_percentages: list[float],
-    removal_percentages: list[float],
-    repetitions: int = 20,
-    perturbation_seed: int = 0,
-) -> pd.DataFrame:
+) -> list[dict]:
     """
-    Valuta la robustezza dei seed set rispetto
-    alla rimozione casuale di archi.
+    Calcola tutti i seed set sul grafo originale G.
 
-    I seed set vengono calcolati una sola volta
-    sul grafo originale G e successivamente
-    mantenuti invariati sui grafi perturbati G'.
+    Per ogni combinazione di:
+        - funzione di costo
+        - budget
+        - algoritmo
+
+    salva il seed set e le relative informazioni baseline.
+
+    I risultati possono poi essere riutilizzati
+    negli esperimenti di edge removal e node removal.
     """
-
-    from src.perturbations import remove_random_edges
-
-    results = []
-
-    # --------------------------------------------------
-    # 1. CALCOLO DEI SEED SET SUL GRAFO ORIGINALE G
-    # --------------------------------------------------
 
     configurations = []
 
@@ -160,10 +121,16 @@ def run_edge_removal_experiments(
                     f"{algorithm_name}"
                 )
 
+                start_time = time.perf_counter()
+
                 seeds = algorithm(
                     graph,
                     budget,
                     costs
+                )
+
+                execution_time = (
+                    time.perf_counter() - start_time
                 )
 
                 seed_cost = seed_set_cost(
@@ -171,12 +138,12 @@ def run_edge_removal_experiments(
                     costs
                 )
 
-                baseline_active, baseline_rounds = (
-                    majority_cascade(
-                        graph,
-                        seeds
-                    )
+                active, rounds = majority_cascade(
+                    graph,
+                    seeds
                 )
+
+                influenced_nodes = len(active)
 
                 configurations.append({
                     "cost_function": cost_name,
@@ -184,20 +151,50 @@ def run_edge_removal_experiments(
                         percentage * 100,
                     "budget": budget,
                     "algorithm": algorithm_name,
+
                     "seeds": seeds,
+
                     "seed_count": len(seeds),
                     "seed_cost": seed_cost,
+
                     "baseline_influenced_nodes":
-                        len(baseline_active),
+                        influenced_nodes,
+
+                    "baseline_influence_percentage":
+                        (
+                            influenced_nodes
+                            / graph.number_of_nodes()
+                        ) * 100,
+
+                    "cascade_activated":
+                        influenced_nodes - len(seeds),
+
                     "baseline_rounds":
-                        baseline_rounds,
+                        rounds,
+
+                    "execution_time_seconds":
+                        execution_time,
                 })
 
-    # --------------------------------------------------
-    # 2. CREAZIONE DEI GRAFI PERTURBATI G'
-    # --------------------------------------------------
+    return configurations
 
-    print("\n=== EDGE REMOVAL EXPERIMENTS ===")
+def run_edge_removal_experiments(
+    graph: nx.Graph,
+    configurations: list[dict],
+    removal_percentages: list[float],
+    repetitions: int = 20,
+    perturbation_seed: int = 0,
+) -> pd.DataFrame:
+    """
+    Valuta la robustezza dei seed set rispetto
+    alla rimozione casuale di archi.
+
+    I seed set vengono calcolati una sola volta
+    sul grafo originale G e successivamente
+    mantenuti invariati sui grafi perturbati G'.
+    """
+
+    results = []
 
     original_num_edges = graph.number_of_edges()
     total_nodes = graph.number_of_nodes()
@@ -324,6 +321,165 @@ def run_edge_removal_experiments(
         print(
             f"Completate {repetitions} "
             f"ripetizioni."
+        )
+
+    return pd.DataFrame(results)
+
+def run_node_removal_experiments(
+    graph: nx.Graph,
+    configurations: list[dict],
+    removal_percentages: list[float],
+    repetitions: int = 20,
+    perturbation_seed: int = 0,
+) -> pd.DataFrame:
+    """
+    Valuta la robustezza dei seed set rispetto
+    alla rimozione casuale di vertici.
+
+    I seed set vengono determinati sul grafo originale G.
+    Dopo la perturbazione vengono utilizzati soltanto
+    i seed ancora presenti in G'.
+    """
+    results = []
+
+    original_num_nodes = graph.number_of_nodes()
+
+    for removal_percentage in removal_percentages:
+
+        print(
+            f"\nRimozione nodi: "
+            f"{removal_percentage * 100:.0f}%"
+        )
+
+        for repetition in range(repetitions):
+
+            current_seed = (
+                perturbation_seed + repetition
+            )
+
+            perturbed_graph = remove_random_nodes(
+                graph,
+                removal_percentage,
+                current_seed
+            )
+
+            removed_nodes = (
+                original_num_nodes
+                - perturbed_graph.number_of_nodes()
+            )
+
+            # ------------------------------------------
+            # 3. Valutazione dei seed originali
+            # ------------------------------------------
+
+            for config in configurations:
+
+                original_seeds = config["seeds"]
+
+                # Manteniamo soltanto i seed
+                # sopravvissuti alla perturbazione.
+                surviving_seeds = (
+                    original_seeds
+                    & set(perturbed_graph.nodes)
+                )
+
+                removed_seeds = (
+                    len(original_seeds)
+                    - len(surviving_seeds)
+                )
+
+                perturbed_active, perturbed_rounds = (
+                    majority_cascade(
+                        perturbed_graph,
+                        surviving_seeds
+                    )
+                )
+
+                perturbed_influenced = len(
+                    perturbed_active
+                )
+
+                baseline_influenced = (
+                    config[
+                        "baseline_influenced_nodes"
+                    ]
+                )
+
+                delta_influence = (
+                    perturbed_influenced
+                    - baseline_influenced
+                )
+
+                retention_percentage = (
+                    perturbed_influenced
+                    / baseline_influenced
+                ) * 100
+
+                # Percentuale rispetto ai nodi
+                # ancora presenti in G'
+                remaining_network_percentage = (
+                    perturbed_influenced
+                    / perturbed_graph.number_of_nodes()
+                ) * 100
+
+                results.append({
+                    "cost_function":
+                        config["cost_function"],
+
+                    "budget_percentage":
+                        config["budget_percentage"],
+
+                    "budget":
+                        config["budget"],
+
+                    "algorithm":
+                        config["algorithm"],
+
+                    "original_seed_count":
+                        config["seed_count"],
+
+                    "surviving_seed_count":
+                        len(surviving_seeds),
+
+                    "removed_seed_count":
+                        removed_seeds,
+
+                    "seed_cost":
+                        config["seed_cost"],
+
+                    "baseline_influenced_nodes":
+                        baseline_influenced,
+
+                    "node_removal_percentage":
+                        removal_percentage * 100,
+
+                    "repetition":
+                        repetition,
+
+                    "removed_nodes":
+                        removed_nodes,
+
+                    "remaining_nodes":
+                        perturbed_graph.number_of_nodes(),
+
+                    "perturbed_influenced_nodes":
+                        perturbed_influenced,
+
+                    "remaining_network_influence_percentage":
+                        remaining_network_percentage,
+
+                    "delta_influence":
+                        delta_influence,
+
+                    "retention_percentage":
+                        retention_percentage,
+
+                    "perturbed_rounds":
+                        perturbed_rounds,
+                })
+
+        print(
+            f"Completate {repetitions} ripetizioni."
         )
 
     return pd.DataFrame(results)

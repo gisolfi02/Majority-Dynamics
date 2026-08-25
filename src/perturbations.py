@@ -56,3 +56,42 @@ def remove_random_edges(
     )
 
     return perturbed_graph
+
+def remove_random_nodes(
+    graph: nx.Graph,
+    removal_percentage: float,
+    seed: int
+) -> nx.Graph:
+    """
+    Restituisce una copia del grafo dopo aver rimosso
+    casualmente una percentuale dei vertici.
+
+    La rimozione di un vertice comporta automaticamente
+    la rimozione di tutti i suoi archi incidenti.
+    """
+
+    if not 0 <= removal_percentage <= 1:
+        raise ValueError(
+            "removal_percentage deve essere compreso tra 0 e 1."
+        )
+
+    perturbed_graph = graph.copy()
+
+    nodes = list(graph.nodes())
+
+    num_nodes_to_remove = int(
+        len(nodes) * removal_percentage
+    )
+
+    rng = random.Random(seed)
+
+    nodes_to_remove = rng.sample(
+        nodes,
+        num_nodes_to_remove
+    )
+
+    perturbed_graph.remove_nodes_from(
+        nodes_to_remove
+    )
+
+    return perturbed_graph
