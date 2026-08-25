@@ -150,11 +150,7 @@ dove $N(v)$ rappresenta l'insieme dei suoi vicini.
 Il grado medio della rete è:
 
 $$
-\bar d =
-\frac{1}{|V|}
-\sum_{v\in V}d(v)
-=
-\frac{2|E|}{|V|}.
+\bar d = \frac{1}{|V|} \sum_{v\in V}d(v) = \frac{2|E|}{|V|}.
 $$
 
 La distribuzione dei gradi permette di osservare la presenza di nodi con quantità differenti di connessioni.
