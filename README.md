@@ -398,7 +398,7 @@ Quando viene valutato un candidato $u$, soltanto i suoi vicini possono modificar
 Il guadagno può quindi essere calcolato come:
 
 $$
-\Delta_u f_1(S)=\left|\left\{v\in N(u):|N(v)\cap S|<t(v)\right\}\right|.
+\Delta_u f_1(S)=|\{v\in N(u):|N(v)\cap S|<t(v)\}|.
 $$
 
 Il candidato viene valutato attraverso:
@@ -415,7 +415,7 @@ $$
 La seconda funzione è:
 
 $$
-f_2(S)=\sum_{v\in V}\sum_{i=1}^{|N(v)\cap S|}\max\left\{\left\lceil\frac{d(v)}2\right\rceil-i+1,0\right\}.
+f_2(S)=\sum_{v\in V}\sum_{i=1}^{|N(v)\cap S|}\max\{\left\lceil\frac{d(v)}2\right\rceil-i+1,0\}.
 $$
 
 Se definiamo:
@@ -434,7 +434,7 @@ $$
 l'aggiunta di un candidato $u$ produce un incremento:
 
 $$
-\boxed{\Delta_u f_2(S)=\sum_{v\in N(u)}\max\left\{t(v)-s(v),0\right\}}
+\boxed{\Delta_u f_2(S)=\sum_{v\in N(u)}\max\{t(v)-s(v),0\}}
 $$
 
 e lo score utilizzato dal greedy è:
