@@ -377,13 +377,7 @@ In termini intuitivi, l'algoritmo cerca il nodo che fornisce il maggiore benefic
 La prima funzione obiettivo è:
 
 $$
-f_1(S)=
-\sum_{v\in V}
-\min
-\left\{
-|N(v)\cap S|,
-\left\lceil\frac{d(v)}2\right\rceil
-\right\}.
+f_1(S)=\sum_{v\in V}\min\left\{|N(v)\cap S|,\left\lceil\frac{d(v)}2\right\rceil\right\}.
 $$
 
 Per ogni nodo $v$, $f_1$ misura quanti suoi vicini appartengono al seed set, limitando però il contributo alla soglia majority.
