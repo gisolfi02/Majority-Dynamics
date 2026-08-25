@@ -398,7 +398,7 @@ Quando viene valutato un candidato $u$, soltanto i suoi vicini possono modificar
 Il guadagno può quindi essere calcolato come:
 
 $$
-\Delta_u f_1(S)=|\{v\in N(u):|N(v)\cap S|<t(v)>\}|.
+\Delta_u f_1(S)=|{v\in N(u):|N(v)\cap S|<t(v)>}|.
 $$
 
 Il candidato viene valutato attraverso:
