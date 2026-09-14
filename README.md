@@ -1035,35 +1035,47 @@ $$
 # 24. Struttura del progetto
 
 ```text
-MajorityDynamics/
-│
-├── data/
-│   └── facebook_combined.txt
-│
-├── src/
-│   ├── graph.py
-│   ├── diffusion.py
-│   ├── costs.py
-│   ├── algorithms.py
-│   ├── perturbations.py
-│   ├── experiments.py
-│   └── plots.py
-│
-├── results/
-│   ├── figures/
-│   ├── tables/
-│   └── csv/
-│       ├── budget_experiments.csv
-│       ├── edge_removal_experiments.csv
-│       ├── edge_removal_aggregated.csv
-│       ├── node_removal_experiments.csv
-│       └── node_removal_aggregated.csv
-│
-├── main.py
-├── generate_plots.py
-├── generate_tables.py
-├── requirements.txt
-└── README.md
+├── 📁 data
+│   └── 📄 facebook_combined.txt
+├── 📁 docs
+│   └── 📕 Relazione Progetto.pdf
+├── 📁 results
+│   ├── 📁 csv
+│   │   ├── 📄 budget_experiments.csv
+│   │   ├── 📄 edge_removal_aggregated.csv
+│   │   ├── 📄 edge_removal_experiments.csv
+│   │   ├── 📄 node_removal_aggregated.csv
+│   │   └── 📄 node_removal_experiments.csv
+│   ├── 📁 figures
+│   │   ├── 🖼️ budget_influence_degree.png
+│   │   ├── 🖼️ budget_influence_random.png
+│   │   ├── 🖼️ degree_histogram.png
+│   │   ├── 🖼️ edge_removal_degree_composite.png
+│   │   ├── 🖼️ edge_removal_random_composite.png
+│   │   ├── 🖼️ local_clustering_histogram.png
+│   │   ├── 🖼️ node_removal_degree_composite.png
+│   │   └── 🖼️ node_removal_random_composite.png
+│   └── 📁 tables
+│       ├── 📄 budget_degree.csv
+│       ├── 📄 budget_random.csv
+│       ├── 📄 edge_removal_degree.csv
+│       ├── 📄 edge_removal_random.csv
+│       ├── 📄 node_removal_degree.csv
+│       └── 📄 node_removal_random.csv
+├── 📁 src
+│   ├── 🐍 algorithms.py
+│   ├── 🐍 costs.py
+│   ├── 🐍 diffusion.py
+│   ├── 🐍 experiments.py
+│   ├── 🐍 graph.py
+│   ├── 🐍 perturbations.py
+│   └── 🐍 plots.py
+├── ⚙️ .gitignore
+├── 📝 README.md
+├── 🐍 generate_plots.py
+├── 🐍 generate_tables.py
+├── 🐍 main.py
+└── 📄 requirements.txt
 ```
 
 ---
